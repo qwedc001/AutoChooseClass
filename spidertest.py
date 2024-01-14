@@ -1,5 +1,6 @@
 import time
 import os
+import schedule
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -20,6 +21,7 @@ def init(url):
     return driver, wait
 
 def choose(driver:webdriver.Chrome, wait:WebDriverWait):
+    print("任务开始")
     start_time = time.time()
     # 点击查询
     wait.until(EC.presence_of_element_located((By.XPATH, '/html/body/div[4]/div/div[1]/div/ul/li[2]/a'))).click() # 这里对应“自主选课”按钮在我的应用的位置
@@ -53,14 +55,16 @@ def choose(driver:webdriver.Chrome, wait:WebDriverWait):
             print(f'[Error]无法定位课程{className}/该课程的按钮元素')
             fail += 1
     end_time = time.time()
-    return total, succ, fail,end_time - start_time
+    print(f'已全部完成,总的选课数{total},成功选课数{succ},失败选课数{fail},用时{round(end_time-start_time,2)}秒')
+    exit()
 
 
 if __name__ == '__main__':
     url = 'https://jw.qlu.edu.cn'
     driver, wait = init(url)
     # auto_login(driver, wait)
-    print("已完成登入，请在将要抢课的时候按下回车")
-    input()
-    total, succ, fail, usedTime = choose(driver, wait)
-    print(f'已全部完成,总的选课数{total},成功选课数{succ},失败选课数{fail},用时{round(usedTime,2)}秒')
+    schedule.every().day.at("12:00").do(choose, driver, wait)
+    print("已完成任务初始化")
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
